@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCL-90 症状自评量表专业版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3a86ff;
+            --bg-body: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --accent-color: #00b894;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 顶部装饰栏 */
+        .header-banner {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: -30px auto 50px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 40px;
+        }
+
+        .intro {
+            background: #f8fbff;
+            border: 1px dashed #3a86ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        /* 题目样式 */
+        .question-card {
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .q-text {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .options-flex {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .option-item {
+            flex: 1;
+            position: relative;
+        }
+
+        .option-item input {
+            display: none; /* 隐藏原生单选框 */
+        }
+
+        .option-item label {
+            display: block;
+            text-align: center;
+            padding: 12px 5px;
+            background: #fff;
+            border: 1.5px solid #d1d8e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .option-item input:checked + label {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(58, 134, 255, 0.3);
+        }
+
+        /* 结果页布局 */
+        #result-section {
+            display: none;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+        }
+
+        .report-title {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-num {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .factor-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .factor-table th, .factor-table td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .factor-table th { background-color: #f1f3f5; }
+
+        .btn-group {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .main-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 60px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(58, 134, 255, 0.4);
+        }
+
+        .export-btn {
+            background: var(--accent-color);
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-banner">
+    <h1>SCL-90 症状自评量表</h1>
+    <p>心理健康专业评估系统</p>
+</div>
+
+<div class="container">
+    <div id="survey-form">
+        <div class="intro">
+            <strong>指导语：</strong>请根据您<strong>最近一周</strong>以来的实际感觉，点击最符合您情况的按钮。
+            <br>1-从无 | 2-轻度 | 3-中度 | 4-相当重 | 5-严重
+        </div>
+
+        <form id="sclForm">
+            <div id="questionsContainer"></div>
+            <div class="btn-group">
+                <button type="button" class="main-btn" onclick="generateReport()">提交评估，生成报告</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="result-section">
+        <div class="report-title">
+            <h2>心理健康测评报告</h2>
+            <p>评估项目：症状自评量表 (SCL-90)</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-label">总分</span>
+                <span class="stat-num" id="res-total">-</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">总均分</span>
+                <span class="stat-num" id="res-mean">-</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">阳性项目数</span>
+                <span class="stat-num" id="res-pos">-</span>
+            </div>
+        </div>
+
+        <h3>各维度因子得分</h3>
+        <table class="factor-table">
+            <thead>
+                <tr>
+                    <th>评估维度</th>
+                    <th>因子得分</th>
+                    <th>状态参考</th>
+                </tr>
+            </thead>
+            <tbody id="factor-tbody"></tbody>
+        </table>
+
+        <div class="intro" style="margin-top: 30px;">
+            <strong>结果解读：</strong>
+            总分超过160分，或阳性项目数超过43项，或任一因子分超过2分，建议关注心理健康状况。本报告仅供参考，不作为诊断依据。
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="main-btn export-btn" onclick="exportPDF()">导出 PDF 专业报告</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const qData = [
+        "头痛","神经过敏，心中不踏实","头脑中有不必要的想法或字句反复出现","头昏或晕倒","对异性的兴趣减退",
+        "对旁人怀有敌意","在某些地方或在某些场合感到害怕","感到精力下降，活动减慢","想弄死自己","感到别人在控制您的思想",
+        "容易烦恼和激动","胸痛","感到害怕露天广场或街道","感到难以完成任务","感到前途没有希望",
+        "想摔坏东西","感到害羞，在别人面前不好意思","感到大多数人都不可靠","食欲不振","容易哭泣",
+        "同异性相处感到害羞不自在","感到受骗，中了圈套或有人想陷害您","无缘无故地突然感到惊恐","经常发火，不可控制","怕单独出门",
+        "经常责备自己","腰痛","感到难以完成任务","感到孤独","感到苦闷",
+        "过分担心","对事物不感兴趣","感到害怕","您的感情容易受到伤害","旁人能知道您的私下想法",
+        "感到别人不理解您、同情您","感到人们对您不友好，不喜欢您","做事必须做得很慢以保证做得正确","心跳得很厉害","恶心或胃部不适",
+        "感到比不上别人","肌肉酸痛","感到有人在背后盯着您、议论您","入睡困难","做事必须反复检查",
+        "难以做出决定","怕乘火车、公共汽车或地铁","呼吸困难","一阵阵热流或冷流","因为害怕而不得不避开某些事物或场合",
+        "脑子变空了","身体发麻或刺痛","喉咙有哽塞感","感到前途黯淡无光","不能集中注意力",
+        "感到身体劲头不足","感到紧张或容易激动","感到手脚发重","想到死亡的事","吃得太多",
+        "当别人看着您或谈论您时感到不自在","有一些不属于您自己的想法","有想打人或伤害别人的冲动","醒得太早","必须反复洗手、洗澡或数数",
+        "睡得不稳不深","有想摔坏或破坏东西的冲动","有一些别人没有的想法或信念","感到对别人感到不自在","在人多的地方感到不自在",
+        "感到做什么都是负担","感到心惊肉跳","感到在公共场合吃东西很不舒服","经常与人争论","一个人时也感到紧张",
+        "别人对您的成绩没有给予正确的评价","即使和别人在一起也感到孤单","感到坐立不安，心神不定","感到自己没有什么价值","感到别人在利用您",
+        "感到受委屈","感到别人在议论您","感到各种场合都害怕","感到别人在利用您","感到想摔东西的冲动",
+        "感到别人在监视您","感到脑子有问题","感到身体有病","感到别人在控制您的思想","感到别人不值得信任"
+    ];
+
+    const factorMap = {
+        "躯体化": [1,4,12,27,40,42,48,49,52,53,56,58],
+        "强迫症状": [3,9,10,28,38,45,46,51,55,65],
+        "人际关系敏感": [6,21,34,36,37,41,61,69,73],
+        "抑郁": [5,14,15,20,22,26,29,30,31,32,54,71,79],
+        "焦虑": [2,17,23,33,39,57,72,78,80,86],
+        "敌对": [11,24,63,67,74,81],
+        "恐怖": [13,25,47,50,70,75,82],
+        "偏执": [8,18,43,68,76,83],
+        "精神病性": [7,16,35,62,77,84,85,87,88,90],
+        "其他": [19,44,59,60,64,66,89]
+    };
+
+    // 初始化题目
+    const container = document.getElementById('questionsContainer');
+    qData.forEach((q, i) => {
+        const qNum = i + 1;
+        const div = document.createElement('div');
+        div.className = 'question-card';
+        div.innerHTML = `
+            <span class="q-text">${qNum}. ${q}</span>
+            <div class="options-flex">
+                ${[1,2,3,4,5].map(v => `
+                    <div class="option-item">
+                        <input type="radio" id="q${qNum}_v${v}" name="q${qNum}" value="${v}" required>
+                        <label for="q${qNum}_v${v}">${['从无','轻度','中度','偏重','严重'][v-1]}</label>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    function generateReport() {
+        const form = document.getElementById('sclForm');
+        const fd = new FormData(form);
+        let total = 0, pos = 0, scores = {};
+
+        for(let i=1; i<=90; i++) {
+            const val = fd.get('q'+i);
+            if(!val) {
+                alert('请回答第 ' + i + ' 题');
+                document.getElementsByName('q'+i)[0].scrollIntoView({behavior: "smooth", block: "center"});
+                return;
+            }
+            let s = parseInt(val);
+            scores[i] = s;
+            total += s;
+            if(s >= 2) pos++;
+        }
+
+        // 填充结果
+        document.getElementById('res-total').innerText = total;
+        document.getElementById('res-mean').innerText = (total/90).toFixed(2);
+        document.getElementById('res-pos').innerText = pos;
+
+        const tbody = document.getElementById('factor-tbody');
+        tbody.innerHTML = '';
+        for(let f in factorMap) {
+            let sum = 0;
+            factorMap[f].forEach(id => sum += scores[id]);
+            const avg = (sum / factorMap[f].length).toFixed(2);
+            const status = avg >= 2 ? '<span style="color:red">偏高</span>' : '<span style="color:green">正常</span>';
+            tbody.innerHTML += `<tr><td>${f}</td><td>${avg}</td><td>${status}</td></tr>`;
+        }
+
+        document.getElementById('survey-form').style.display = 'none';
+        document.getElementById('result-section').style.display = 'block';
+        window.scrollTo(0,0);
+    }
+
+    async function exportPDF() {
+        const element = document.getElementById('result-section');
+        const btn = document.querySelector('.export-btn');
+        btn.innerText = "正在生成 PDF...";
+        
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = canvas.height * width / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save('SCL90测评报告.pdf');
+        btn.innerText = "导出 PDF 专业报告";
+    }
+</script>
+
+</body>
+</html>
