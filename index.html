@@ -6,7 +6,6 @@
     <title>SCL-90 症状自评量表专业版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #3a86ff;
@@ -14,200 +13,65 @@
             --card-bg: #ffffff;
             --text-main: #2d3436;
             --accent-color: #00b894;
+            --color-normal: #2ecc71;
+            --color-mild: #f1c40f;
+            --color-mod: #e67e22;
+            --color-sev: #e74c3c;
         }
 
-        body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background-color: var(--bg-body); margin: 0; padding: 0; }
+        .header-banner { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; padding: 20px; text-align: center; }
+        .container { max-width: 650px; margin: 20px auto; width: 95%; }
 
-        .header-banner {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            width: 90%;
-            flex-grow: 1;
-        }
-
-        /* 进度条 */
-        .progress-container {
-            width: 100%;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        #progress-bar {
-            height: 100%;
-            background: var(--accent-color);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* 卡片样式 */
-        .question-card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            display: none; /* 默认隐藏 */
-            animation: fadeIn 0.4s ease;
-        }
-
-        .question-card.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .q-number {
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .q-text {
-            font-size: 20px;
-            font-weight: 600;
-            line-height: 1.5;
-            margin-bottom: 30px;
-            min-height: 60px;
-        }
-
-        .options-vertical {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
+        /* 答题卡片 */
+        .progress-container { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        #progress-bar { height: 100%; background: var(--accent-color); width: 0%; transition: width 0.3s ease; }
+        .question-card { background: white; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; animation: fadeIn 0.4s ease; }
+        .question-card.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .q-text { font-size: 20px; font-weight: 600; margin-bottom: 30px; min-height: 60px; }
+        .options-vertical { display: flex; flex-direction: column; gap: 12px; }
         .option-item input { display: none; }
-        .option-item label {
-            display: block;
-            padding: 16px 20px;
-            border: 2px solid #edf2f7;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 16px;
-        }
-
-        .option-item input:checked + label {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .nav-btns {
-            margin-top: 30px;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
-
+        .option-item label { display: block; padding: 16px 20px; border: 2px solid #edf2f7; border-radius: 12px; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .option-item input:checked + label { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .nav-btns { margin-top: 30px; display: flex; gap: 15px; }
+        .btn { padding: 12px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
         .btn-prev { background: #e2e8f0; color: #4a5568; }
         .btn-next { background: var(--primary-color); color: white; flex-grow: 1; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* 结果页 */
-        #result-section {
-            display: none;
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 50px;
-        }
+        /* 结果报告表样式 */
+        #result-section { display: none; background: white; padding: 40px 30px; border-radius: 20px; margin-bottom: 50px; }
+        .report-title { text-align: center; font-size: 22px; font-weight: bold; margin: 30px 0 20px; color: #333; }
+        
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; text-align: center; }
+        .report-table th { background: #f8f9fa; padding: 12px; border: 1px solid #dee2e6; color: #444; font-size: 14px; }
+        .report-table td { padding: 12px; border: 1px solid #dee2e6; font-size: 15px; }
+        .result-highlight { font-size: 20px; font-weight: bold; color: var(--primary-color); }
 
-        .chart-container {
-            width: 100%;
-            margin: 20px 0;
-            position: relative;
-        }
+        /* 标签样式 */
+        .tag { display: inline-block; padding: 3px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; color: white; }
+        .tag-normal { background: var(--color-normal); }
+        .tag-mild { background: var(--color-mild); color: #333; }
+        .tag-mod { background: var(--color-mod); }
+        .tag-sev { background: var(--color-sev); }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
+        /* 范围说明栏 */
+        .range-info { margin: 25px 0; background: #f8fbff; padding: 15px; border-radius: 10px; border: 1px dashed var(--primary-color); }
+        .range-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .range-item { text-align: center; padding: 5px; border-radius: 5px; background: white; border: 1px solid #eee; font-size: 11px; }
 
-        .stat-box {
-            background: #f8fbff;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-num {
-            display: block;
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .factor-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .factor-table td, .factor-table th {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            text-align: center;
-        }
-
-        .export-btn {
-            width: 100%;
-            background: var(--accent-color);
-            color: white;
-            margin-top: 20px;
-            font-size: 16px;
-        }
+        .report-note { margin-top: 20px; padding: 15px; background: #fff9db; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #666; text-align: justify; }
+        .export-btn { width: 100%; background: var(--accent-color); color: white; margin-top: 25px; font-size: 16px; padding: 15px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header-banner">
-    <h2 style="margin:0">SCL-90 心理健康测评</h2>
-</div>
+<div class="header-banner"><h2>SCL-90 症状自评量表专业版</h2></div>
 
 <div class="container">
     <div id="survey-ui">
-        <div class="progress-container">
-            <div id="progress-bar"></div>
-        </div>
-        
-        <form id="sclForm">
-            <div id="questionsWrapper"></div>
-        </form>
-
+        <div class="progress-container"><div id="progress-bar"></div></div>
+        <form id="sclForm"><div id="questionsWrapper"></div></form>
         <div class="nav-btns">
             <button class="btn btn-prev" id="prevBtn" onclick="changeQuestion(-1)" disabled>上一题</button>
             <button class="btn btn-next" id="nextBtn" onclick="changeQuestion(1)">下一题</button>
@@ -215,50 +79,46 @@
     </div>
 
     <div id="result-section">
-        <h2 style="text-align:center">测评报告</h2>
-        
-        <div class="stats-grid">
-            <div class="stat-box"><span>总分</span><span class="stat-num" id="res-total">0</span></div>
-            <div class="stat-box"><span>均分</span><span class="stat-num" id="res-mean">0</span></div>
-            <div class="stat-box"><span>阳性数</span><span class="stat-num" id="res-pos">0</span></div>
-        </div>
-
-        <div class="chart-container">
-            <canvas id="radarChart"></canvas>
-        </div>
-
-        <table class="factor-table">
+        <div class="report-title">总评分结果报告表</div>
+        <table class="report-table">
             <thead>
-                <tr><th>维度</th><th>分值</th><th>状态</th></tr>
+                <tr><th>测评指标</th><th>数值结果</th><th>总体判定</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>总分 (90-450)</td><td id="res-total" class="result-highlight">-</td><td rowspan="2" id="res-status-cell"><span id="res-tag" class="tag">-</span></td></tr>
+                <tr><td>总均分 (1-5)</td><td id="res-mean" class="result-highlight">-</td></tr>
+                <tr><td>阳性项目数</td><td id="res-pos" class="result-highlight">-</td><td>(得分≥2的项目)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="range-info">
+            <strong>数值范围参考（均分）：</strong>
+            <div class="range-grid">
+                <div class="range-item">1~2分<br><span style="color:var(--color-normal)">●</span> 正常</div>
+                <div class="range-item">2~3分<br><span style="color:var(--color-mild)">●</span> 轻度</div>
+                <div class="range-item">3~4分<br><span style="color:var(--color-mod)">●</span> 中度</div>
+                <div class="range-item">4~5分<br><span style="color:var(--color-sev)">●</span> 重度</div>
+            </div>
+        </div>
+
+        <div class="report-title">各因子得分表</div>
+        <table class="report-table">
+            <thead>
+                <tr><th width="35%">因子名称</th><th width="30%">因子均分</th><th width="35%">严重程度</th></tr>
             </thead>
             <tbody id="factor-tbody"></tbody>
         </table>
+
+        <div class="report-note">
+            <strong>说明：</strong>按全国正常人SCL-90常模(N=1388)(1-5级评分)(国内医院常用常模)，每个因子均分数值范围为1~5，参考结果是以因子均分得到。如果因子均分超过因子常模(M+SD，平均分+标准差)即表示筛查异常。由于量表只是辅助筛查工具，因此量表测试结果仅供参考。
+        </div>
 
         <button class="btn export-btn" onclick="exportPDF()">导出 PDF 报告</button>
     </div>
 </div>
 
 <script>
-    const qData = [
-        "头痛","神经过敏，心中不踏实","头脑中有不必要的想法或字句反复出现","头昏或晕倒","对异性的兴趣减退",
-        "对旁人怀有敌意","在某些地方或在某些场合感到害怕","感到精力下降，活动减慢","想弄死自己","感到别人在控制您的思想",
-        "容易烦恼和激动","胸痛","感到害怕露天广场或街道","感到难以完成任务","感到前途没有希望",
-        "想摔坏东西","感到害羞，在别人面前不好意思","感到大多数人都不可靠","食欲不振","容易哭泣",
-        "同异性相处感到害羞不自在","感到受骗，中了圈套或有人想陷害您","无缘无故地突然感到惊恐","经常发火，不可控制","怕单独出门",
-        "经常责备自己","腰痛","感到难以完成任务","感到孤独","感到苦闷",
-        "过分担心","对事物不感兴趣","感到害怕","您的感情容易受到伤害","旁人能知道您的私下想法",
-        "感到别人不理解您、同情您","感到人们对您不友好，不喜欢您","做事必须做得很慢以保证做得正确","心跳得很厉害","恶心或胃部不适",
-        "感到比不上别人","肌肉酸痛","感到有人在背后盯着您、议论您","入睡困难","做事必须反复检查",
-        "难以做出决定","怕乘火车、公共汽车或地铁","呼吸困难","一阵阵热流或冷流","因为害怕而不得不避开某些事物或场合",
-        "脑子变空了","身体发麻或刺痛","喉咙有哽塞感","感到前途黯淡无光","不能集中注意力",
-        "感到身体劲头不足","感到紧张或容易激动","感到手脚发重","想到死亡的事","吃得太多",
-        "当别人看着您或谈论您时感到不自在","有一些不属于您自己的想法","有想打人或伤害别人的冲动","醒得太早","必须反复洗手、洗澡或数数",
-        "睡得不稳不深","有想摔坏或破坏东西的冲动","有一些别人没有的想法或信念","感到对别人感到不自在","在人多的地方感到不自在",
-        "感到做什么都是负担","感到心惊肉跳","感到在公共场合吃东西很不舒服","经常与人争论","一个人时也感到紧张",
-        "别人对您的成绩没有给予正确的评价","即使和别人在一起也感到孤单","感到坐立不安，心神不定","感到自己没有什么价值","感到别人在利用您",
-        "感到受委屈","感到别人在议论您","感到各种场合都害怕","感到别人在利用您","感到想摔东西的冲动",
-        "感到别人在监视您","感到脑子有问题","感到身体有病","感到别人在控制您的思想","感到别人不值得信任"
-    ];
+    const qData = [ "头痛","神经过敏，心中不踏实","头脑中有不必要的想法或字句反复出现","头昏或晕倒","对异性的兴趣减退","对旁人怀有敌意","在某些地方或在某些场合感到害怕","感到精力下降，活动减慢","想弄死自己","感到别人在控制您的思想","容易烦恼和激动","胸痛","感到害怕露天广场或街道","感到难以完成任务","感到前途没有希望","想摔坏东西","感到害羞，在别人面前不好意思","感到大多数人都不可靠","食欲不振","容易哭泣","同异性相处感到害羞不自在","感到受骗，中了圈套或有人想陷害您","无缘无故地突然感到惊恐","经常发火，不可控制","怕单独出门","经常责备自己","腰痛","感到难以完成任务","感到孤独","感到苦闷","过分担心","对事物不感兴趣","感到害怕","您的感情容易受到伤害","旁人能知道您的私下想法","感到别人不理解您、同情您","感到人们对您不友好，不喜欢您","做事必须做得很慢以保证做得正确","心跳得很厉害","恶心或胃部不适","感到比不上别人","肌肉酸痛","感到有人在背后盯着您、议论您","入睡困难","做事必须反复检查","难以做出决定","怕乘火车、公共汽车或地铁","呼吸困难","一阵阵热流或冷流","因为害怕而不得不避开某些事物或场合","脑子变空了","身体发麻或刺痛","喉咙有哽塞感","感到前途黯淡无光","不能集中注意力","感到身体劲头不足","感到紧张或容易激动","感到手脚发重","想到死亡的事","吃得太多","当别人看着您或谈论您时感到不自在","有一些不属于您自己的想法","有想打人或伤害别人的冲动","醒得太早","必须反复洗手、洗澡或数数","睡得不稳不深","有想摔坏或破坏东西的冲动","有一些别人没有的想法或信念","感到对别人感到不自在","在人多的地方感到不自在","感到做什么都是负担","感到心惊肉跳","感到在公共场合吃东西很不舒服","经常与人争论","一个人时也感到紧张","别人对您的成绩没有给予正确的评价","即使和别人在一起也感到孤单","感到坐立不安，心神不定","感到自己没有什么价值","感到别人在利用您","感到受委屈","感到别人在议论您","感到各种场合都害怕","感到别人在利用您","感到想摔东西的冲动","感到别人在监视您","感到脑子有问题","感到身体有病","感到别人在控制您的思想","感到别人不值得信任"];
 
     const factorMap = {
         "躯体化": [1,4,12,27,40,42,48,49,52,53,56,58],
@@ -269,127 +129,80 @@
         "敌对": [11,24,63,67,74,81],
         "恐怖": [13,25,47,50,70,75,82],
         "偏执": [8,18,43,68,76,83],
-        "精神病性": [7,16,35,62,77,84,85,87,88,90]
+        "精神病性": [7,16,35,62,77,84,85,87,88,90],
+        "其他(睡眠/饮食)": [19,44,59,60,64,66,89]
     };
 
     let currentStep = 1;
     const totalSteps = qData.length;
-
-    // 初始化题目卡片
     const wrapper = document.getElementById('questionsWrapper');
+
     qData.forEach((q, i) => {
         const n = i + 1;
         const div = document.createElement('div');
         div.className = `question-card ${n === 1 ? 'active' : ''}`;
         div.id = `card-${n}`;
-        div.innerHTML = `
-            <span class="q-number">问题 ${n} / ${totalSteps}</span>
-            <div class="q-text">${q}</div>
-            <div class="options-vertical">
-                ${[1,2,3,4,5].map(v => `
-                    <div class="option-item">
-                        <input type="radio" id="q${n}_v${v}" name="q${n}" value="${v}" onchange="autoNext(${n})">
-                        <label for="q${n}_v${v}">${['从无','轻度','中度','偏重','严重'][v-1]}</label>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+        div.innerHTML = `<span style="color:var(--primary-color);font-size:14px;font-weight:bold">第 ${n} 题 / 共 90 题</span><div class="q-text">${q}</div><div class="options-vertical">${[1,2,3,4,5].map(v => `<div class="option-item"><input type="radio" id="q${n}_v${v}" name="q${n}" value="${v}" onchange="autoNext(${n})"><label for="q${n}_v${v}">${['从无','轻度','中度','偏重','严重'][v-1]}</label></div>`).join('')}</div>`;
         wrapper.appendChild(div);
     });
 
     function updateUI() {
         document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
         document.getElementById(`card-${currentStep}`).classList.add('active');
-        
         document.getElementById('progress-bar').style.width = `${(currentStep/totalSteps)*100}%`;
         document.getElementById('prevBtn').disabled = currentStep === 1;
-        document.getElementById('nextBtn').innerText = currentStep === totalSteps ? "提交结果" : "下一题";
+        document.getElementById('nextBtn').innerText = currentStep === totalSteps ? "完成并查看报告" : "下一题";
     }
 
     function changeQuestion(step) {
-        if(step === 1 && !getVal(currentStep)) {
-            alert("请先选择一个选项");
-            return;
-        }
-        
-        if(currentStep === totalSteps && step === 1) {
-            generateReport();
-            return;
-        }
-
+        if(step === 1 && !getVal(currentStep)) { alert("请选择您的感受"); return; }
+        if(currentStep === totalSteps && step === 1) { generateReport(); return; }
         currentStep += step;
         updateUI();
     }
 
-    function autoNext(n) {
-        if(n < totalSteps) {
-            setTimeout(() => {
-                currentStep = n + 1;
-                updateUI();
-            }, 300);
-        }
-    }
+    function autoNext(n) { if(n < totalSteps) { setTimeout(() => { currentStep = n + 1; updateUI(); }, 250); } }
+    function getVal(n) { const el = document.querySelector(`input[name="q${n}"]:checked`); return el ? parseInt(el.value) : null; }
 
-    function getVal(n) {
-        const el = document.querySelector(`input[name="q${n}"]:checked`);
-        return el ? parseInt(el.value) : null;
+    function getStatusTag(score) {
+        if (score < 2) return '<span class="tag tag-normal">正常</span>';
+        if (score < 3) return '<span class="tag tag-mild">轻度</span>';
+        if (score < 4) return '<span class="tag tag-mod">中度</span>';
+        return '<span class="tag tag-sev">重度</span>';
     }
 
     function generateReport() {
-        let total = 0, pos = 0, factorScores = [];
-        let labels = [], data = [];
+        let total = 0, pos = 0;
+        const tbody = document.getElementById('factor-tbody');
+        tbody.innerHTML = '';
 
+        // 计算各因子得分
         for(let f in factorMap) {
             let sum = 0;
-            factorMap[f].forEach(id => {
-                const val = getVal(id) || 1;
-                sum += val;
-                total += val;
-                if(val >= 2) pos++;
-            });
+            factorMap[f].forEach(id => sum += (getVal(id) || 1));
             const avg = (sum / factorMap[f].length).toFixed(2);
-            labels.push(f);
-            data.push(avg);
-            
-            const status = avg >= 2 ? '<span style="color:red">偏高</span>' : '<span style="color:green">正常</span>';
-            document.getElementById('factor-tbody').innerHTML += `<tr><td>${f}</td><td>${avg}</td><td>${status}</td></tr>`;
+            tbody.innerHTML += `<tr><td>${f}</td><td>${avg}</td><td>${getStatusTag(avg)}</td></tr>`;
         }
-
+        
+        // 计算总指标
+        for(let i=1; i<=90; i++) {
+            let v = getVal(i) || 1;
+            total += v;
+            if(v >= 2) pos++;
+        }
+        const mean = (total / 90).toFixed(2);
+        
         document.getElementById('res-total').innerText = total;
-        document.getElementById('res-mean').innerText = (total/90).toFixed(2);
+        document.getElementById('res-mean').innerText = mean;
         document.getElementById('res-pos').innerText = pos;
+
+        const tagContainer = document.getElementById('res-tag');
+        tagContainer.innerHTML = mean < 2 ? "正常" : (mean < 3 ? "轻度" : (mean < 4 ? "中度" : "重度"));
+        tagContainer.className = `tag ${mean < 2 ? 'tag-normal' : (mean < 3 ? 'tag-mild' : (mean < 4 ? 'tag-mod' : 'tag-sev'))}`;
 
         document.getElementById('survey-ui').style.display = 'none';
         document.getElementById('result-section').style.display = 'block';
-
-        renderChart(labels, data);
-    }
-
-    function renderChart(labels, data) {
-        const ctx = document.getElementById('radarChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '因子得分 (2分以上为预警)',
-                    data: data,
-                    backgroundColor: 'rgba(58, 134, 255, 0.2)',
-                    borderColor: 'rgba(58, 134, 255, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(58, 134, 255, 1)'
-                }]
-            },
-            options: {
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 5,
-                        ticks: { stepSize: 1 }
-                    }
-                }
-            }
-        });
+        window.scrollTo(0,0);
     }
 
     async function exportPDF() {
@@ -398,8 +211,10 @@
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
-        pdf.addImage(imgData, 'PNG', 10, 10, 190, 0);
-        pdf.save('SCL90报告.pdf');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = canvas.height * width / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 10, width, height);
+        pdf.save('SCL90_专业测评报告.pdf');
     }
 </script>
 </body>
